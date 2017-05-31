@@ -26,6 +26,10 @@ intervals in terms of closed intervals.
 
 ### Preamble
 
+  For most uses of `closed`, you'll only need `DataKinds` and maybe
+  `TypeFamilies`. The other extensions below just make some of the
+  tests concise.
+
   ```haskell
   {-# LANGUAGE TypeFamilies #-}
   {-# LANGUAGE DataKinds #-}
@@ -129,7 +133,6 @@ intervals in terms of closed intervals.
       it "addition to the maxBound should have no effect" $ do
         let result = maxBound :: Range (Includes 1) (Excludes 10)
         result + 1 `shouldBe` result
-
 
       it "subtraction from the minBound should have no effect" $ do
         let result = minBound :: Range (Includes 1) (Excludes 10)

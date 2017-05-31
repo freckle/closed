@@ -1,0 +1,24 @@
+name: closed
+version: "0.1.0"
+synopsis: Integers bounded by a closed interval
+maintainer: Front Row Education
+github: frontrowed/closed
+license: MIT
+
+dependencies:
+  - base
+
+library:
+  source-dirs:
+    - library
+  ghc-options: -Wall -O2
+
+tests:
+  readme:
+    main: README.lhs
+    ghc-options: -Wall -pgmL markdown-unlit
+    dependencies:
+      - base
+      - closed
+      - hspec
+      - markdown-unlit

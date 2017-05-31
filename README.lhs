@@ -29,12 +29,17 @@ intervals in terms of closed intervals.
   ```haskell
   {-# LANGUAGE TypeFamilies #-}
   {-# LANGUAGE DataKinds #-}
+  {-# LANGUAGE OverloadedStrings #-}
+  {-# LANGUAGE OverloadedLists #-}
   {-# OPTIONS_GHC -fno-warn-unticked-promoted-constructors #-}
 
   module Main where
 
   import Closed
   import Control.Exception
+  import Data.Aeson
+  import qualified Data.Csv as CSV
+  import Data.Vector
   import Data.Proxy
   import Test.Hspec
 
@@ -129,6 +134,32 @@ intervals in terms of closed intervals.
       it "subtraction from the minBound should have no effect" $ do
         let result = minBound :: Range (Includes 1) (Excludes 10)
         result - 1 `shouldBe` result
+  ```
+
+### Serialization
+
+  Parsing of closed values is strict.
+
+  ```haskell
+    describe "json" $ do
+
+      it "should successfully parse values in the specified range" $ do
+        let result = eitherDecode "1" :: Either String (Range (Includes 1) (Excludes 10))
+        result `shouldBe` Right 1
+
+      it "should fail to parse values outside the specified range" $ do
+        let result = eitherDecode "0" :: Either String (Range (Includes 1) (Excludes 10))
+        result `shouldBe` Left "Error in $: parseJSON: Integer 0 is not representable in Closed 1 9"
+
+    describe "csv" $ do
+
+      it "should successfully parse values in the specified range" $ do
+        let result = CSV.decode CSV.NoHeader "1" :: Either String (Vector (CSV.Only (Range (Includes 1) (Excludes 10))))
+        result `shouldBe` Right [CSV.Only 1]
+
+      it "should fail to parse values outside the specified range" $ do
+        let result = CSV.decode CSV.NoHeader "0" :: Either String (Vector (CSV.Only (Range (Includes 1) (Excludes 10))))
+        result `shouldBe` Left "parse error (Failed reading: conversion error: parseField: Integer 0 is not representable in Closed 1 9) at \"\""
   ```
 
 ## Remarks

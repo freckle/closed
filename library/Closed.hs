@@ -30,11 +30,15 @@ module Closed
   , isValidClosed
   ) where
 
+import Data.Aeson
+import qualified Data.Csv as CSV
+import Data.Hashable
 import Data.Maybe
 import Data.Proxy
 import Data.Ratio
 import GHC.TypeLits
 import Closed.Internal (Closed(..))
+import Control.DeepSeq
 
 -- | Describe whether the endpoint of a 'Range' includes
 -- or excludes its argument
@@ -81,7 +85,7 @@ closed x = result
   result =
     if x >= natVal (lowerBound result) && x <= natVal (upperBound result)
       then Closed x
-      else unrepresentable x result "closed"
+      else error $ unrepresentable x result "closed"
 
 -- | Test equality on 'Closed' values in the same range
 instance Eq (Closed n m) where
@@ -123,7 +127,7 @@ instance (n <= m, KnownNat n, KnownNat m) => Num (Closed n m) where
     result =
       if x >= natVal (lowerBound result) && x <= natVal (upperBound result)
         then Closed x
-        else unrepresentable x result "fromInteger"
+        else error $ unrepresentable x result "fromInteger"
 
 instance (n <= m, KnownNat n, KnownNat m) => Real (Closed n m) where
   toRational (Closed x) = x % 1
@@ -132,12 +136,35 @@ instance (n <= m, KnownNat n, KnownNat m) => Integral (Closed n m) where
   quotRem (Closed x) (Closed y) = (Closed $ x `quot` y, Closed $ x `rem` y)
   toInteger (Closed x) = x
 
-unrepresentable :: (KnownNat n, KnownNat m) => Integer -> Closed n m -> String -> a
+instance NFData (Closed n m)
+
+instance Hashable (Closed n m)
+
+instance ToJSON (Closed n m) where
+  toEncoding = toEncoding . getClosed
+
+instance (n <= m, KnownNat n, KnownNat m) => FromJSON (Closed n m) where
+  parseJSON v = do
+    x <- parseJSON v
+    case packClosed x of
+      Just cx -> pure cx
+      n -> fail $ unrepresentable x (fromJust n) "parseJSON"
+
+instance CSV.ToField (Closed n m) where
+  toField = CSV.toField . getClosed
+
+instance (n <= m, KnownNat n, KnownNat m) => CSV.FromField (Closed n m) where
+  parseField s = do
+    x <- CSV.parseField s
+    case packClosed x of
+      Just cx -> pure cx
+      n -> fail $ unrepresentable x (fromJust n) "parseField"
+
+unrepresentable :: (KnownNat n, KnownNat m) => Integer -> Closed n m -> String -> String
 unrepresentable x cx prefix =
-  error $
-    prefix ++ ": Integer " ++ show x ++
-    " is not representable in Closed " ++ show (natVal $ lowerBound cx) ++
-    " " ++ show (natVal $ upperBound cx)
+  prefix ++ ": Integer " ++ show x ++
+  " is not representable in Closed " ++ show (natVal $ lowerBound cx) ++
+  " " ++ show (natVal $ upperBound cx)
 
 -- | Convert a type-level literal into a 'Closed' value
 natToClosed :: (n <= x, x <= m, KnownNat x, KnownNat n, KnownNat m) => proxy x -> Closed n m

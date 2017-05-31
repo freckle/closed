@@ -7,6 +7,10 @@ license: MIT
 
 dependencies:
   - base
+  - deepseq
+  - aeson
+  - cassava
+  - hashable
 
 library:
   source-dirs:
@@ -22,3 +26,4 @@ tests:
       - closed
       - hspec
       - markdown-unlit
+      - vector

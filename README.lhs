@@ -14,14 +14,14 @@ This package exports one core data type `Closed (n :: Nat) (m :: Nat)`
 for describing integers bounded by a closed interval. That is, given
 `cx :: Closed n m`, `getClosed cx` is an integer `x` where `n <= x <= m`.
 
-We also export a type family `Range` for describing open and half-open
+We also export a type family `Bounds` for describing open and half-open
 intervals in terms of closed intervals.
 
   ```plaintext
-  Range (Includes 0) (Includes 10) => Closed 0 10
-  Range (Includes 0) (Excludes 10) => Closed 0 9
-  Range (Excludes 0) (Includes 10) => Closed 1 10
-  Range (Excludes 0) (Excludes 10) => Closed 1 9
+  Bounds (Inclusive 0) (Inclusive 10) => Closed 0 10
+  Bounds (Inclusive 0) (Exclusive 10) => Closed 0 9
+  Bounds (Exclusive 0) (Inclusive 10) => Closed 1 10
+  Bounds (Exclusive 0) (Exclusive 10) => Closed 1 9
   ```
 
 ### Preamble
@@ -35,6 +35,8 @@ intervals in terms of closed intervals.
   {-# LANGUAGE DataKinds #-}
   {-# LANGUAGE OverloadedStrings #-}
   {-# LANGUAGE OverloadedLists #-}
+  {-# LANGUAGE TypeApplications #-}
+  {-# LANGUAGE ScopedTypeVariables #-}
   {-# OPTIONS_GHC -fno-warn-unticked-promoted-constructors #-}
 
   module Main where
@@ -45,7 +47,9 @@ intervals in terms of closed intervals.
   import qualified Data.Csv as CSV
   import Data.Vector
   import Data.Proxy
+  import GHC.TypeLits
   import Test.Hspec
+  import Test.Hspec.QuickCheck
 
   main :: IO ()
   main = hspec $ do
@@ -53,39 +57,39 @@ intervals in terms of closed intervals.
 
 ### Construction
 
-  The safe constructor `packClosed` uses `Maybe` to indicate failure. There is
-  also an unsafe constructor `closed` as well as a `Num` instance that implements
+  The safe constructor `closed` uses `Maybe` to indicate failure. There is
+  also an unsafe constructor `unsafeClosed` as well as a `Num` instance that implements
   `fromInteger`.
 
   ```haskell
     describe "safe construction" $ do
 
-      it "should successfully construct values in the specified range" $ do
-        let result = packClosed 2 :: Maybe (Range (Includes 2) (Excludes 5))
+      it "should successfully construct values in the specified bounds" $ do
+        let result = closed 2 :: Maybe (Bounds (Inclusive 2) (Exclusive 5))
         getClosed <$> result `shouldBe` Just 2
 
-      it "should fail to construct values outside the specified range" $ do
-        let result = packClosed 1 :: Maybe (Range (Includes 2) (Excludes 5))
+      it "should fail to construct values outside the specified bounds" $ do
+        let result = closed 1 :: Maybe (Bounds (Inclusive 2) (Exclusive 5))
         getClosed <$> result `shouldBe` Nothing
 
     describe "unsafe construction" $ do
 
-      it "should successfully construct values in the specified range" $ do
-        let result = closed 2 :: Range (Includes 2) (Excludes 5)
+      it "should successfully construct values in the specified bounds" $ do
+        let result = unsafeClosed 2 :: Bounds (Inclusive 2) (Exclusive 5)
         getClosed result `shouldBe` 2
 
-      it "should fail to construct values outside the specified range" $ do
-        let result = closed 1 :: Range (Includes 2) (Excludes 5)
+      it "should fail to construct values outside the specified bounds" $ do
+        let result = unsafeClosed 1 :: Bounds (Inclusive 2) (Exclusive 5)
         evaluate (getClosed result) `shouldThrow` anyErrorCall
 
     describe "unsafe literal construction" $ do
 
-      it "should successfully construct values in the specified range" $ do
-        let result = 2 :: Range (Includes 2) (Excludes 5)
+      it "should successfully construct values in the specified bounds" $ do
+        let result = 2 :: Bounds (Inclusive 2) (Exclusive 5)
         getClosed result `shouldBe` 2
 
-      it "should fail to construct values outside the specified range" $ do
-        let result = 1 :: Range (Includes 2) (Excludes 5)
+      it "should fail to construct values outside the specified bounds" $ do
+        let result = 1 :: Bounds (Inclusive 2) (Exclusive 5)
         evaluate (getClosed result) `shouldThrow` anyErrorCall
   ```
 
@@ -97,7 +101,7 @@ intervals in terms of closed intervals.
     describe "elimination" $ do
 
       it "should allow the integer value to be extracted" $ do
-        let result = 1 :: Range (Includes 0) (Excludes 10)
+        let result = 1 :: Bounds (Inclusive 0) (Exclusive 10)
         getClosed result `shouldBe` 1
   ```
 
@@ -108,7 +112,7 @@ intervals in terms of closed intervals.
   ```haskell
     describe "bounds manipulation" $ do
 
-      let cx = 2 :: Range (Includes 1) (Excludes 10)
+      let cx = 2 :: Bounds (Inclusive 1) (Exclusive 10)
 
       it "should allow querying the bounds" $ do
         upperBound cx `shouldBe` (Proxy :: Proxy 9)
@@ -131,11 +135,11 @@ intervals in terms of closed intervals.
     describe "arithmetic" $ do
 
       it "addition to the maxBound should have no effect" $ do
-        let result = maxBound :: Range (Includes 1) (Excludes 10)
+        let result = maxBound :: Bounds (Inclusive 1) (Exclusive 10)
         result + 1 `shouldBe` result
 
       it "subtraction from the minBound should have no effect" $ do
-        let result = minBound :: Range (Includes 1) (Excludes 10)
+        let result = minBound :: Bounds (Inclusive 1) (Exclusive 10)
         result - 1 `shouldBe` result
   ```
 
@@ -146,23 +150,36 @@ intervals in terms of closed intervals.
   ```haskell
     describe "json" $ do
 
-      it "should successfully parse values in the specified range" $ do
-        let result = eitherDecode "1" :: Either String (Range (Includes 1) (Excludes 10))
+      it "should successfully parse values in the specified bounds" $ do
+        let result = eitherDecode "1" :: Either String (Bounds (Inclusive 1) (Exclusive 10))
         result `shouldBe` Right 1
 
-      it "should fail to parse values outside the specified range" $ do
-        let result = eitherDecode "0" :: Either String (Range (Includes 1) (Excludes 10))
+      it "should fail to parse values outside the specified bounds" $ do
+        let result = eitherDecode "0" :: Either String (Bounds (Inclusive 1) (Exclusive 10))
         result `shouldBe` Left "Error in $: parseJSON: Integer 0 is not representable in Closed 1 9"
 
     describe "csv" $ do
 
-      it "should successfully parse values in the specified range" $ do
-        let result = CSV.decode CSV.NoHeader "1" :: Either String (Vector (CSV.Only (Range (Includes 1) (Excludes 10))))
+      it "should successfully parse values in the specified bounds" $ do
+        let result = CSV.decode CSV.NoHeader "1" :: Either String (Vector (CSV.Only (Bounds (Inclusive 1) (Exclusive 10))))
         result `shouldBe` Right [CSV.Only 1]
 
-      it "should fail to parse values outside the specified range" $ do
-        let result = CSV.decode CSV.NoHeader "0" :: Either String (Vector (CSV.Only (Range (Includes 1) (Excludes 10))))
+      it "should fail to parse values outside the specified bounds" $ do
+        let result = CSV.decode CSV.NoHeader "0" :: Either String (Vector (CSV.Only (Bounds (Inclusive 1) (Exclusive 10))))
         result `shouldBe` Left "parse error (Failed reading: conversion error: parseField: Integer 0 is not representable in Closed 1 9) at \"\""
+  ```
+
+### Testing
+
+  Closed values can be generated with QuickCheck
+
+  ```haskell
+    describe "quickcheck" $ do
+
+      prop "should always generate values in the specified bounds" $
+        \(cx :: Closed 0 1000) ->
+          natVal (lowerBound cx) <= getClosed cx &&
+          getClosed cx <= natVal (upperBound cx)
   ```
 
 ## Remarks

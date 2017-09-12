@@ -18,6 +18,7 @@ import Data.Proxy
 import Data.Ratio
 import Control.DeepSeq
 import GHC.Generics
+import GHC.Stack
 import GHC.TypeLits
 import Test.QuickCheck
 
@@ -67,7 +68,7 @@ closed x = result
       else Nothing
 
 -- | Create a 'Closed' value throwing an error if the argument is not in range
-unsafeClosed :: (n <= m, KnownNat n, KnownNat m) => Integer -> Closed n m
+unsafeClosed :: (HasCallStack, n <= m, KnownNat n, KnownNat m) => Integer -> Closed n m
 unsafeClosed x = result
  where
   result =

@@ -164,16 +164,16 @@ unrepresentable x cx prefix =
 natToClosed :: (n <= x, x <= m, KnownNat x, KnownNat n, KnownNat m) => proxy x -> Closed n m
 natToClosed p = Closed $ natVal p
 
--- | Add one inhabitant at the end
-weakenUpper :: Closed n m -> Closed n (m + 1)
+-- | Add inhabitants at the end
+weakenUpper :: (n <= m, m <= k) => Closed n m -> Closed n k
 weakenUpper (Closed x) = Closed x
 
--- | Add one inhabitant at the beginning
-weakenLower :: Closed (n + 1) m -> Closed n m
+-- | Add inhabitants at the beginning
+weakenLower :: (n <= m, k <= n) => Closed n m -> Closed k m
 weakenLower (Closed x) = Closed x
 
--- | Remove one inhabitant from the end. Returns 'Nothing' if the input was removed
-strengthenUpper :: (KnownNat n, KnownNat m) => Closed n (m + 1) -> Maybe (Closed n m)
+-- | Remove inhabitants from the end. Returns 'Nothing' if the input was removed
+strengthenUpper :: (KnownNat n, KnownNat m, KnownNat k, n <= m, n <= k, k <= m) => Closed n m -> Maybe (Closed n k)
 strengthenUpper (Closed x) = result
  where
   result =
@@ -181,8 +181,8 @@ strengthenUpper (Closed x) = result
       then Just $ Closed x
       else Nothing
 
--- | Remove one inhabitant from the beginning. Returns 'Nothing' if the input was removed
-strengthenLower :: (KnownNat (n + 1), KnownNat m) => Closed n m -> Maybe (Closed (n + 1) m)
+-- | Remove inhabitants from the beginning. Returns 'Nothing' if the input was removed
+strengthenLower :: (KnownNat n, KnownNat m, KnownNat k, n <= m, n <= k, k <= m) => Closed n m -> Maybe (Closed k m)
 strengthenLower (Closed x) = result
  where
   result =

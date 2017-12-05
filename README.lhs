@@ -112,19 +112,27 @@ intervals in terms of closed intervals.
   ```haskell
     describe "bounds manipulation" $ do
 
-      let cx = 2 :: Bounds (Inclusive 1) (Exclusive 10)
+      let cx = 4 :: Bounds (Inclusive 2) (Exclusive 10)
 
       it "should allow querying the bounds" $ do
         upperBound cx `shouldBe` (Proxy :: Proxy 9)
-        lowerBound cx `shouldBe` (Proxy :: Proxy 1)
+        lowerBound cx `shouldBe` (Proxy :: Proxy 2)
 
       it "should allow weakening the bounds" $ do
         upperBound (weakenUpper cx) `shouldBe` (Proxy :: Proxy 10)
+        lowerBound (weakenLower cx) `shouldBe` (Proxy :: Proxy 1)
+
+      it "should allow weakening the bounds by more than one" $ do
+        upperBound (weakenUpper cx) `shouldBe` (Proxy :: Proxy 20)
         lowerBound (weakenLower cx) `shouldBe` (Proxy :: Proxy 0)
 
       it "should allow strengthening the bounds" $ do
         upperBound <$> strengthenUpper cx `shouldBe` Just (Proxy :: Proxy 8)
-        lowerBound <$> strengthenLower cx `shouldBe` Just (Proxy :: Proxy 2)
+        lowerBound <$> strengthenLower cx `shouldBe` Just (Proxy :: Proxy 3)
+
+      it "should allow strengthening the bounds by more than one" $ do
+        upperBound <$> strengthenUpper cx `shouldBe` Just (Proxy :: Proxy 7)
+        lowerBound <$> strengthenLower cx `shouldBe` Just (Proxy :: Proxy 4)
   ```
 
 ### Arithmetic

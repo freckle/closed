@@ -1,6 +1,7 @@
 {-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE DataKinds #-}
+{-# LANGUAGE ExplicitForAll #-}
 {-# LANGUAGE KindSignatures #-}
 {-# LANGUAGE TypeApplications #-}
 {-# LANGUAGE TypeFamilies #-}
@@ -58,7 +59,7 @@ upperBound :: Closed n m -> Proxy m
 upperBound _ = Proxy
 
 -- | Safely create a 'Closed' value using the specified argument
-closed :: (n <= m, KnownNat n, KnownNat m) => Integer -> Maybe (Closed n m)
+closed :: forall n m. (n <= m, KnownNat n, KnownNat m) => Integer -> Maybe (Closed n m)
 closed x = result
  where
   extracted = fromJust result
@@ -68,7 +69,7 @@ closed x = result
       else Nothing
 
 -- | Create a 'Closed' value throwing an error if the argument is not in range
-unsafeClosed :: (HasCallStack, n <= m, KnownNat n, KnownNat m) => Integer -> Closed n m
+unsafeClosed :: forall n m. (HasCallStack, n <= m, KnownNat n, KnownNat m) => Integer -> Closed n m
 unsafeClosed x = result
  where
   result =
@@ -161,19 +162,19 @@ unrepresentable x cx prefix =
   " " ++ show (natVal $ upperBound cx)
 
 -- | Convert a type-level literal into a 'Closed' value
-natToClosed :: (n <= x, x <= m, KnownNat x, KnownNat n, KnownNat m) => proxy x -> Closed n m
+natToClosed :: forall n m x proxy. (n <= x, x <= m, KnownNat x, KnownNat n, KnownNat m) => proxy x -> Closed n m
 natToClosed p = Closed $ natVal p
 
 -- | Add inhabitants at the end
-weakenUpper :: (n <= m, m <= k) => Closed n m -> Closed n k
+weakenUpper :: forall k n m. (n <= m, m <= k) => Closed n m -> Closed n k
 weakenUpper (Closed x) = Closed x
 
 -- | Add inhabitants at the beginning
-weakenLower :: (n <= m, k <= n) => Closed n m -> Closed k m
+weakenLower :: forall k n m. (n <= m, k <= n) => Closed n m -> Closed k m
 weakenLower (Closed x) = Closed x
 
 -- | Remove inhabitants from the end. Returns 'Nothing' if the input was removed
-strengthenUpper :: (KnownNat n, KnownNat m, KnownNat k, n <= m, n <= k, k <= m) => Closed n m -> Maybe (Closed n k)
+strengthenUpper :: forall k n m. (KnownNat n, KnownNat m, KnownNat k, n <= m, n <= k, k <= m) => Closed n m -> Maybe (Closed n k)
 strengthenUpper (Closed x) = result
  where
   result =
@@ -182,7 +183,7 @@ strengthenUpper (Closed x) = result
       else Nothing
 
 -- | Remove inhabitants from the beginning. Returns 'Nothing' if the input was removed
-strengthenLower :: (KnownNat n, KnownNat m, KnownNat k, n <= m, n <= k, k <= m) => Closed n m -> Maybe (Closed k m)
+strengthenLower :: forall k n m. (KnownNat n, KnownNat m, KnownNat k, n <= m, n <= k, k <= m) => Closed n m -> Maybe (Closed k m)
 strengthenLower (Closed x) = result
  where
   result =

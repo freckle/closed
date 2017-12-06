@@ -1,12 +1,15 @@
 name: closed
 version: "0.1.0"
 synopsis: Integers bounded by a closed interval
-maintainer: Front Row Education
+description: Integers bounded by a closed interval
+category: Data
+author: Chris Parks <chris@frontrowed.com>
+maintainer: Front Row Education <engineering@frontrowed.com>
 github: frontrowed/closed
 license: MIT
 
 dependencies:
-  - base
+  - base >= 4.9 && < 5
   - deepseq
   - aeson
   - cassava
@@ -16,7 +19,6 @@ dependencies:
 library:
   source-dirs:
     - library
-  ghc-options: -Wall -O2
 
 tests:
   readme:
@@ -28,3 +30,6 @@ tests:
       - hspec
       - markdown-unlit
       - vector
+
+extra-source-files:
+  - README.lhs

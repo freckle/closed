@@ -18,6 +18,7 @@ import Data.Maybe
 import Data.Proxy
 import Data.Ratio
 import Control.DeepSeq
+import Control.Monad
 import GHC.Generics
 import GHC.Stack
 import GHC.TypeLits
@@ -47,7 +48,7 @@ type family Bounds (lhs :: Endpoint) (rhs :: Endpoint) :: * where
 -- inhabitant using the 'Closed' type
 type Single (n :: Nat) = Bounds ('Inclusive n) ('Inclusive n)
 
--- | Syntactic sugare to express a value whose lower bound is zero
+-- | Syntactic sugar to express a value whose lower bound is zero
 type FiniteNat (rhs :: Endpoint) = Bounds ('Inclusive 0) rhs
 
 -- | Proxy for the lower bound of a 'Closed' value
@@ -63,10 +64,9 @@ closed :: forall n m. (n <= m, KnownNat n, KnownNat m) => Integer -> Maybe (Clos
 closed x = result
  where
   extracted = fromJust result
-  result =
-    if x >= natVal (lowerBound extracted) && x <= natVal (upperBound extracted)
-      then return $ Closed x
-      else Nothing
+  result = do
+    guard $ x >= natVal (lowerBound extracted) && x <= natVal (upperBound extracted)
+    pure $ Closed x
 
 -- | Create a 'Closed' value throwing an error if the argument is not in range
 unsafeClosed :: forall n m. (HasCallStack, n <= m, KnownNat n, KnownNat m) => Integer -> Closed n m
@@ -177,19 +177,17 @@ weakenLower (Closed x) = Closed x
 strengthenUpper :: forall k n m. (KnownNat n, KnownNat m, KnownNat k, n <= m, n <= k, k <= m) => Closed n m -> Maybe (Closed n k)
 strengthenUpper (Closed x) = result
  where
-  result =
-    if x <= natVal (upperBound $ fromJust result)
-      then Just $ Closed x
-      else Nothing
+  result = do
+    guard $ x <= natVal (upperBound $ fromJust result)
+    pure $ Closed x
 
 -- | Remove inhabitants from the beginning. Returns 'Nothing' if the input was removed
 strengthenLower :: forall k n m. (KnownNat n, KnownNat m, KnownNat k, n <= m, n <= k, k <= m) => Closed n m -> Maybe (Closed k m)
 strengthenLower (Closed x) = result
  where
-  result =
-    if x >= natVal (lowerBound $ fromJust result)
-      then Just $ Closed x
-      else Nothing
+  result = do
+    guard $ x >= natVal (lowerBound $ fromJust result)
+    pure $ Closed x
 
 -- | Test two different types of 'Closed' values for equality.
 equals :: Closed n m -> Closed o p -> Bool
@@ -212,7 +210,7 @@ sub (Closed x) (Closed y)
   | otherwise = Left $ Closed $ y - x
 
 -- | Multiply two different types of 'Closed' values
-multiply :: Closed n m -> Closed o p -> Closed (n * m) (o * p)
+multiply :: Closed n m -> Closed o p -> Closed (n * o) (m * p)
 multiply (Closed x) (Closed y) = Closed $ x * y
 
 -- | Verifies that a given 'Closed' value is valid.

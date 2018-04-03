@@ -44,10 +44,12 @@ intervals in terms of closed intervals.
   import Closed
   import Control.Exception
   import Data.Aeson
-  import qualified Data.Csv as CSV
-  import Data.Vector
+  import Database.Persist
   import Data.Proxy
+  import Data.Text
+  import Data.Vector
   import GHC.TypeLits
+  import qualified Data.Csv as CSV
   import Test.Hspec
   import Test.Hspec.QuickCheck
 
@@ -137,7 +139,8 @@ intervals in terms of closed intervals.
 
 ### Arithmetic
 
-  Arithmetic gets stuck at the upper and lower bounds instead of wrapping.
+  Arithmetic gets stuck at the upper and lower bounds instead of wrapping. This is called
+  [Saturation Arithmetic](https://en.wikipedia.org/wiki/Saturation_arithmetic).
 
   ```haskell
     describe "arithmetic" $ do
@@ -175,6 +178,16 @@ intervals in terms of closed intervals.
       it "should fail to parse values outside the specified bounds" $ do
         let result = CSV.decode CSV.NoHeader "0" :: Either String (Vector (CSV.Only (Bounds (Inclusive 1) (Exclusive 10))))
         result `shouldBe` Left "parse error (Failed reading: conversion error: parseField: Integer 0 is not representable in Closed 1 9) at \"\""
+
+    describe "persistent" $ do
+
+      it "should successfully parse values in the specified bounds" $ do
+        let result = fromPersistValue (PersistInt64 1) :: Either Text (Bounds (Inclusive 1) (Exclusive 10))
+        result `shouldBe` Right 1
+
+      it "should fail to parse values outside the specified bounds" $ do
+        let result = fromPersistValue (PersistInt64 0) :: Either Text (Bounds (Inclusive 1) (Exclusive 10))
+        result `shouldBe` Left "fromPersistValue: Integer 0 is not representable in Closed 1 9"
   ```
 
 ### Testing
@@ -197,5 +210,5 @@ and [finite-typelits-bounded](https://github.com/pseudonom/finite-typelits-bound
 are summarized below:
 
 * `finite-typelits` - A value of `Finite (n :: Nat)` is in the half-open interval `[0, n)`. Uses modular arithmetic.
-* `finite-typelits-bounded` - A value of `Finite (n :: Nat)` is in the half-open interval `[0, n)`. Uses bounded arithmetic.
-* `closed` - A value of `Closed (n :: Nat) (m :: Nat)` is in the closed interval `[n, m]`. Uses bounded arithmetic.
+* `finite-typelits-bounded` - A value of `Finite (n :: Nat)` is in the half-open interval `[0, n)`. Uses saturation arithmetic.
+* `closed` - A value of `Closed (n :: Nat) (m :: Nat)` is in the closed interval `[n, m]`. Uses saturation arithmetic.

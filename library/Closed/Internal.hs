@@ -11,17 +11,19 @@
 {-# OPTIONS_GHC -fno-warn-unticked-promoted-constructors #-}
 module Closed.Internal where
 
+import Control.DeepSeq
+import Control.Monad
 import Data.Aeson
-import qualified Data.Csv as CSV
+import Database.Persist.Sql
 import Data.Hashable
 import Data.Maybe
 import Data.Proxy
 import Data.Ratio
-import Control.DeepSeq
-import Control.Monad
+import Data.Text (pack)
 import GHC.Generics
 import GHC.Stack
 import GHC.TypeLits
+import qualified Data.Csv as CSV
 import Test.QuickCheck
 
 newtype Closed (n :: Nat) (m :: Nat)
@@ -154,6 +156,17 @@ instance (n <= m, KnownNat n, KnownNat m) => CSV.FromField (Closed n m) where
 instance (n <= m, KnownNat n, KnownNat m) => Arbitrary (Closed n m) where
   arbitrary =
     Closed <$> choose (natVal @n Proxy, natVal @m Proxy)
+
+instance (n <= m, KnownNat n, KnownNat m) => PersistField (Closed n m) where
+  toPersistValue = toPersistValue . (fromIntegral @Integer @Int) . getClosed
+  fromPersistValue value = do
+    x <- fromIntegral @Int @Integer <$> fromPersistValue value
+    case closed @n @m x of
+      Just cx -> pure cx
+      n -> Left $ pack $ unrepresentable x (fromJust n) "fromPersistValue"
+
+instance (n <= m, KnownNat n, KnownNat m) => PersistFieldSql (Closed n m) where
+  sqlType _ = sqlType (Proxy @Int)
 
 unrepresentable :: (KnownNat n, KnownNat m) => Integer -> Closed n m -> String -> String
 unrepresentable x cx prefix =

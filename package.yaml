@@ -1,5 +1,5 @@
 name: closed
-version: "0.1.0"
+version: "0.2.0"
 synopsis: Integers bounded by a closed interval
 description: Integers bounded by a closed interval
 category: Data
@@ -9,12 +9,14 @@ github: frontrowed/closed
 license: MIT
 
 dependencies:
-  - base >= 4.9 && < 5
-  - deepseq
   - aeson
+  - base >= 4.9 && < 5
   - cassava
+  - deepseq
   - hashable
+  - persistent
   - QuickCheck
+  - text
 
 library:
   source-dirs:

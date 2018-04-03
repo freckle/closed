@@ -72,11 +72,12 @@ The safe constructor `closed` uses `Maybe` to indicate failure. There is also an
   describe "unsafe construction" $ do
 
     it "should successfully construct values in the specified bounds" $ do
-      let result = unsafeClosed 2 :: Bounds (Inclusive 2) (Exclusive 5)
+      -- Note that you can use -XTypeApplications instead of type annotations
+      let result = unsafeClosed @2 @4 2
       getClosed result `shouldBe` 2
 
     it "should fail to construct values outside the specified bounds" $ do
-      let result = unsafeClosed 1 :: Bounds (Inclusive 2) (Exclusive 5)
+      let result = unsafeClosed @2 @4 1
       evaluate (getClosed result) `shouldThrow` anyErrorCall
 
   describe "unsafe literal construction" $ do
@@ -112,24 +113,24 @@ The upper and lower bounds can be queried, strengthened, and weakened.
     let cx = 4 :: Bounds (Inclusive 2) (Exclusive 10)
 
     it "should allow querying the bounds" $ do
-      upperBound cx `shouldBe` (Proxy :: Proxy 9)
-      lowerBound cx `shouldBe` (Proxy :: Proxy 2)
+      upperBound cx `shouldBe` (Proxy @9)
+      lowerBound cx `shouldBe` (Proxy @2)
 
     it "should allow weakening the bounds" $ do
-      upperBound (weakenUpper cx) `shouldBe` (Proxy :: Proxy 10)
-      lowerBound (weakenLower cx) `shouldBe` (Proxy :: Proxy 1)
+      upperBound (weakenUpper cx) `shouldBe` (Proxy @10)
+      lowerBound (weakenLower cx) `shouldBe` (Proxy @1)
 
     it "should allow weakening the bounds by more than one" $ do
-      upperBound (weakenUpper cx) `shouldBe` (Proxy :: Proxy 20)
-      lowerBound (weakenLower cx) `shouldBe` (Proxy :: Proxy 0)
+      upperBound (weakenUpper cx) `shouldBe` (Proxy @20)
+      lowerBound (weakenLower cx) `shouldBe` (Proxy @0)
 
     it "should allow strengthening the bounds" $ do
-      upperBound <$> strengthenUpper cx `shouldBe` Just (Proxy :: Proxy 8)
-      lowerBound <$> strengthenLower cx `shouldBe` Just (Proxy :: Proxy 3)
+      upperBound <$> strengthenUpper cx `shouldBe` Just (Proxy @8)
+      lowerBound <$> strengthenLower cx `shouldBe` Just (Proxy @3)
 
     it "should allow strengthening the bounds by more than one" $ do
-      upperBound <$> strengthenUpper cx `shouldBe` Just (Proxy :: Proxy 7)
-      lowerBound <$> strengthenLower cx `shouldBe` Just (Proxy :: Proxy 4)
+      upperBound <$> strengthenUpper cx `shouldBe` Just (Proxy @7)
+      lowerBound <$> strengthenLower cx `shouldBe` Just (Proxy @4)
 ```
 
 ### Arithmetic

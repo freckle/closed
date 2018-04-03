@@ -12,12 +12,9 @@ stack build
 
 ### Overview
 
-This package exports one core data type `Closed (n :: Nat) (m :: Nat)`
-for describing integers bounded by a closed interval. That is, given
-`cx :: Closed n m`, `getClosed cx` is an integer `x` where `n <= x <= m`.
+This package exports one core data type `Closed (n :: Nat) (m :: Nat)` for describing integers bounded by a closed interval. That is, given `cx :: Closed n m`, `getClosed cx` is an integer `x` where `n <= x <= m`.
 
-We also export a type family `Bounds` for describing open and half-open
-intervals in terms of closed intervals.
+We also export a type family `Bounds` for describing open and half-open intervals in terms of closed intervals.
 
 ```plaintext
 Bounds (Inclusive 0) (Inclusive 10) => Closed 0 10
@@ -28,9 +25,7 @@ Bounds (Exclusive 0) (Exclusive 10) => Closed 1 9
 
 ### Preamble
 
-For most uses of `closed`, you'll only need `DataKinds` and maybe
-`TypeFamilies`. The other extensions below just make some of the
-tests concise.
+For most uses of `closed`, you'll only need `DataKinds` and maybe `TypeFamilies`. The other extensions below just make some of the tests concise.
 
 ```haskell
 {-# LANGUAGE TypeFamilies #-}
@@ -61,9 +56,7 @@ main = hspec $ do
 
 ### Construction
 
-The safe constructor `closed` uses `Maybe` to indicate failure. There is
-also an unsafe constructor `unsafeClosed` as well as a `Num` instance that implements
-`fromInteger`.
+The safe constructor `closed` uses `Maybe` to indicate failure. There is also an unsafe constructor `unsafeClosed` as well as a `Num` instance that implements `fromInteger`.
 
 ```haskell
   describe "safe construction" $ do
@@ -141,8 +134,7 @@ The upper and lower bounds can be queried, strengthened, and weakened.
 
 ### Arithmetic
 
-Arithmetic gets stuck at the upper and lower bounds instead of wrapping. This is called
-[Saturation Arithmetic](https://en.wikipedia.org/wiki/Saturation_arithmetic).
+Arithmetic gets stuck at the upper and lower bounds instead of wrapping. This is called [Saturation Arithmetic](https://en.wikipedia.org/wiki/Saturation_arithmetic).
 
 ```haskell
   describe "arithmetic" $ do
@@ -207,9 +199,7 @@ Closed values can be generated with QuickCheck
 
 ## Remarks
 
-This library was inspired by [finite-typelits](https://hackage.haskell.org/package/finite-typelits)
-and [finite-typelits-bounded](https://github.com/pseudonom/finite-typelits-bounded). The differences
-are summarized below:
+This library was inspired by [finite-typelits](https://hackage.haskell.org/package/finite-typelits) and [finite-typelits-bounded](https://github.com/pseudonom/finite-typelits-bounded). The differences are summarized below:
 
 * `finite-typelits` - A value of `Finite (n :: Nat)` is in the half-open interval `[0, n)`. Uses modular arithmetic.
 * `finite-typelits-bounded` - A value of `Finite (n :: Nat)` is in the half-open interval `[0, n)`. Uses saturation arithmetic.

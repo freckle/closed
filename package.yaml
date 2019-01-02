@@ -1,5 +1,5 @@
 name: closed
-version: "0.2.0"
+version: "0.2.1"
 synopsis: Integers bounded by a closed interval
 description: Integers bounded by a closed interval
 category: Data

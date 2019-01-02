@@ -1,29 +1,31 @@
-{-# LANGUAGE DeriveGeneric #-}
-{-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE DataKinds #-}
+{-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE ExplicitForAll #-}
+{-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE KindSignatures #-}
+{-# LANGUAGE NoStarIsType #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE TypeApplications #-}
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE TypeOperators #-}
 {-# LANGUAGE UndecidableInstances #-}
-{-# LANGUAGE FlexibleContexts #-}
 {-# OPTIONS_GHC -fno-warn-unticked-promoted-constructors #-}
 module Closed.Internal where
 
 import Control.DeepSeq
 import Control.Monad
 import Data.Aeson
-import Database.Persist.Sql
+import qualified Data.Csv as CSV
 import Data.Hashable
+import Data.Kind
 import Data.Maybe
 import Data.Proxy
 import Data.Ratio
 import Data.Text (pack)
+import Database.Persist.Sql
 import GHC.Generics
 import GHC.Stack
 import GHC.TypeLits
-import qualified Data.Csv as CSV
 import Test.QuickCheck
 
 newtype Closed (n :: Nat) (m :: Nat)
@@ -40,7 +42,7 @@ data Endpoint
 
 -- | Syntactic sugar to express open and half-open intervals using
 -- the 'Closed' type
-type family Bounds (lhs :: Endpoint) (rhs :: Endpoint) :: * where
+type family Bounds (lhs :: Endpoint) (rhs :: Endpoint) :: Type where
   Bounds (Inclusive n) (Inclusive m) = Closed  n       m
   Bounds (Inclusive n) (Exclusive m) = Closed  n      (m - 1)
   Bounds (Exclusive n) (Inclusive m) = Closed (n + 1)  m

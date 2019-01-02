@@ -1,10 +1,10 @@
 name: closed
-version: "0.2.0"
+version: "0.2.0.1"
 synopsis: Integers bounded by a closed interval
-description: Integers bounded by a closed interval
+description: Integers bounded by a closed interval checked at compile time
 category: Data
 author: Chris Parks <chris@freckle.com>
-maintainer: Front Row Education <engineering@freckle.com>
+maintainer: Freckle Education <engineering@freckle.com>
 github: frontrowed/closed
 license: MIT
 

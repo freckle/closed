@@ -160,7 +160,7 @@ instance (n <= m, KnownNat n, KnownNat m) => Arbitrary (Closed n m) where
     Closed <$> choose (natVal @n Proxy, natVal @m Proxy)
 
 instance (n <= m, KnownNat n, KnownNat m) => PersistField (Closed n m) where
-  toPersistValue = toPersistValue . (fromIntegral @Integer @Int) . getClosed
+  toPersistValue = toPersistValue . fromIntegral @Integer @Int . getClosed
   fromPersistValue value = do
     x <- fromIntegral @Int @Integer <$> fromPersistValue value
     case closed @n @m x of

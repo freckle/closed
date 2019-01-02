@@ -3,13 +3,21 @@
 {-# LANGUAGE ExplicitForAll #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE KindSignatures #-}
-{-# LANGUAGE NoStarIsType #-}
+{-# LANGUAGE CPP #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE TypeApplications #-}
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE TypeOperators #-}
 {-# LANGUAGE UndecidableInstances #-}
+
+-- Prevent kind errors arising from using * to mean multiplication on
+-- type-level natural numbers.
+#if __GLASGOW_HASKELL__ >= 806
+{-# LANGUAGE NoStarIsType #-}
+#endif
+
 {-# OPTIONS_GHC -fno-warn-unticked-promoted-constructors #-}
+
 module Closed.Internal where
 
 import Control.DeepSeq
@@ -17,7 +25,7 @@ import Control.Monad
 import Data.Aeson
 import qualified Data.Csv as CSV
 import Data.Hashable
-import Data.Kind
+import Data.Kind (Type)
 import Data.Maybe
 import Data.Proxy
 import Data.Ratio
@@ -160,7 +168,7 @@ instance (n <= m, KnownNat n, KnownNat m) => Arbitrary (Closed n m) where
     Closed <$> choose (natVal @n Proxy, natVal @m Proxy)
 
 instance (n <= m, KnownNat n, KnownNat m) => PersistField (Closed n m) where
-  toPersistValue = toPersistValue . (fromIntegral @Integer @Int) . getClosed
+  toPersistValue = toPersistValue . fromIntegral @Integer @Int . getClosed
   fromPersistValue value = do
     x <- fromIntegral @Int @Integer <$> fromPersistValue value
     case closed @n @m x of

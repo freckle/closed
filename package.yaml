@@ -3,8 +3,8 @@ version: "0.2.0"
 synopsis: Integers bounded by a closed interval
 description: Integers bounded by a closed interval
 category: Data
-author: Chris Parks <chris@frontrowed.com>
-maintainer: Front Row Education <engineering@frontrowed.com>
+author: Chris Parks <chris@freckle.com>
+maintainer: Front Row Education <engineering@freckle.com>
 github: frontrowed/closed
 license: MIT
 
@@ -12,22 +12,22 @@ dependencies:
   - aeson
   - base >= 4.9 && < 5
   - cassava
-  - deepseq
-  - hashable
   - persistent
-  - QuickCheck
   - text
 
 library:
   source-dirs:
     - library
+  dependencies:
+    - deepseq
+    - hashable
+    - QuickCheck
 
 tests:
   readme:
     main: README.lhs
     ghc-options: -Wall -pgmL markdown-unlit
     dependencies:
-      - base
       - closed
       - hspec
       - markdown-unlit

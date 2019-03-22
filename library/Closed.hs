@@ -6,6 +6,7 @@ module Closed
   , FiniteNat
   , closed
   , unsafeClosed
+  , clamp
   , getClosed
   , lowerBound
   , upperBound

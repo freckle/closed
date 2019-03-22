@@ -89,6 +89,13 @@ unsafeClosed x = result
       then Closed x
       else error $ unrepresentable x result "unsafeClosed"
 
+-- | Clamp an @'Integral'@ in the range constrained by a @'Closed'@ interval
+clamp :: forall n m a. (KnownNat n, KnownNat m, n <= m, Integral a) => a -> Closed n m
+clamp x
+  | fromIntegral x < getClosed (minBound @(Closed n m)) = minBound
+  | fromIntegral x > getClosed (maxBound @(Closed n m)) = maxBound
+  | otherwise = Closed (fromIntegral x)
+
 -- | Test equality on 'Closed' values in the same range
 instance Eq (Closed n m) where
   Closed x == Closed y = x == y
@@ -242,10 +249,3 @@ multiply (Closed x) (Closed y) = Closed $ x * y
 isValidClosed :: (KnownNat n, KnownNat m) => Closed n m -> Bool
 isValidClosed cx@(Closed x) =
   natVal (lowerBound cx) <= x && x <= natVal (upperBound cx)
-
--- | Clamp an @'Integral'@ in the range constrained by a @'Closed'@ interval
-clamp :: forall n m a. (KnownNat n, KnownNat m, n <= m, Integral a) => a -> Closed n m
-clamp x
-  | fromIntegral x < getClosed (minBound @(Closed n m)) = minBound
-  | fromIntegral x > getClosed (maxBound @(Closed n m)) = maxBound
-  | otherwise = Closed (fromIntegral x)

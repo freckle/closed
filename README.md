@@ -80,6 +80,19 @@ The safe constructor `closed` uses `Maybe` to indicate failure. There is also an
       let result = unsafeClosed @2 @4 1
       evaluate (getClosed result) `shouldThrow` anyErrorCall
 
+  describe "construction with clamp" $ do
+    it "should round up to lower bound" $ do
+      let result = clamp @2 @4 @Int 0
+      getClosed result `shouldBe` 2 
+
+    it "should round down to upper bound" $ do
+      let result = clamp @2 @4 @Int 6
+      getClosed result `shouldBe` 4
+
+    it "should accept internal value as-is" $ do
+      let result = clamp @2 @4 @Int 3
+      getClosed result `shouldBe` 3
+
   describe "unsafe literal construction" $ do
 
     it "should successfully construct values in the specified bounds" $ do

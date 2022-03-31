@@ -1,3 +1,7 @@
+## 0.2.0.2
+
+* Add support for GHCs 9.0 and 9.2
+
 ## 0.2.0.1
 
 * Add support for `ghc 8.6.X`

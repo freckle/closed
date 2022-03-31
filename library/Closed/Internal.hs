@@ -1,38 +1,38 @@
-{-# LANGUAGE DataKinds #-}
-{-# LANGUAGE DeriveGeneric #-}
-{-# LANGUAGE FlexibleContexts #-}
-{-# LANGUAGE CPP #-}
-{-# LANGUAGE ScopedTypeVariables #-}
-{-# LANGUAGE TypeApplications #-}
-{-# LANGUAGE TypeFamilies #-}
-{-# LANGUAGE TypeOperators #-}
+{-# LANGUAGE CPP                  #-}
+{-# LANGUAGE DataKinds            #-}
+{-# LANGUAGE DeriveGeneric        #-}
+{-# LANGUAGE FlexibleContexts     #-}
+{-# LANGUAGE ScopedTypeVariables  #-}
+{-# LANGUAGE TypeApplications     #-}
+{-# LANGUAGE TypeFamilies         #-}
+{-# LANGUAGE TypeOperators        #-}
 {-# LANGUAGE UndecidableInstances #-}
 
 -- Prevent kind errors arising from using * to mean multiplication on
 -- type-level natural numbers.
 #if __GLASGOW_HASKELL__ >= 806
-{-# LANGUAGE NoStarIsType #-}
+{-# LANGUAGE NoStarIsType         #-}
 #endif
 
 {-# OPTIONS_GHC -fno-warn-unticked-promoted-constructors #-}
 
 module Closed.Internal where
 
-import Control.DeepSeq
-import Control.Monad
-import Data.Aeson
-import qualified Data.Csv as CSV
-import Data.Hashable
-import Data.Kind (Type)
-import Data.Maybe
-import Data.Proxy
-import Data.Ratio
-import Data.Text (pack)
-import Database.Persist.Sql
-import GHC.Generics
-import GHC.Stack
-import GHC.TypeLits
-import Test.QuickCheck
+import           Control.DeepSeq
+import           Control.Monad
+import           Data.Aeson
+import qualified Data.Csv             as CSV
+import           Data.Hashable
+import           Data.Kind            (Type)
+import           Data.Maybe
+import           Data.Proxy
+import           Data.Ratio
+import           Data.Text            (pack)
+import           Database.Persist.Sql
+import           GHC.Generics
+import           GHC.Stack
+import           GHC.TypeLits
+import           Test.QuickCheck
 
 newtype Closed (n :: Nat) (m :: Nat)
   = Closed { getClosed :: Integer }
@@ -156,7 +156,7 @@ instance (n <= m, KnownNat n, KnownNat m) => FromJSON (Closed n m) where
     x <- parseJSON v
     case closed x of
       Just cx -> pure cx
-      n -> fail $ unrepresentable x (fromJust n) "parseJSON"
+      n       -> fail $ unrepresentable x (fromJust n) "parseJSON"
 
 instance CSV.ToField (Closed n m) where
   toField = CSV.toField . getClosed
@@ -166,7 +166,7 @@ instance (n <= m, KnownNat n, KnownNat m) => CSV.FromField (Closed n m) where
     x <- CSV.parseField s
     case closed x of
       Just cx -> pure cx
-      n -> fail $ unrepresentable x (fromJust n) "parseField"
+      n       -> fail $ unrepresentable x (fromJust n) "parseField"
 
 instance (n <= m, KnownNat n, KnownNat m) => Arbitrary (Closed n m) where
   arbitrary =
@@ -178,7 +178,7 @@ instance (n <= m, KnownNat n, KnownNat m) => PersistField (Closed n m) where
     x <- fromIntegral @Int @Integer <$> fromPersistValue value
     case closed @n @m x of
       Just cx -> pure cx
-      n -> Left $ pack $ unrepresentable x (fromJust n) "fromPersistValue"
+      n       -> Left $ pack $ unrepresentable x (fromJust n) "fromPersistValue"
 
 instance (n <= m, KnownNat n, KnownNat m) => PersistFieldSql (Closed n m) where
   sqlType _ = sqlType (Proxy @Int)

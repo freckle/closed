@@ -211,6 +211,18 @@ Closed values can be generated with QuickCheck
         getClosed cx <= natVal (upperBound cx)
 ```
 
+## Release
+
+To release a new version of this library, push a commit to `main` using a
+conventionally-formatted commit message.
+
+- Prefix with `fix:` to release a new patch version,
+- Prefix with `feat:` to release a new minor version, or
+- Prefix with `feat!:` to release a new major version
+
+To change the "epoch" version, edit it in `package.yaml` and change the
+`.releaserc.yaml` tag prefix to match.
+
 ## Remarks
 
 This library was inspired by [finite-typelits](https://hackage.haskell.org/package/finite-typelits) and [finite-typelits-bounded](https://github.com/pseudonom/finite-typelits-bounded). The differences are summarized below:

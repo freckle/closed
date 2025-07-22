@@ -1,0 +1,18 @@
+tagFormat: "v0.${version}" # PVP prefixed
+
+plugins:
+  - - "@semantic-release/commit-analyzer"
+    - preset: "conventionalcommits"
+  - - "@semantic-release/release-notes-generator"
+    - preset: "conventionalcommits"
+  - - "@semantic-release/github"
+    - successCommentCondition: false
+      failCommentCondition: false
+  - - "semantic-release-stack-upload"
+    - pvpBounds: lower
+      stripSuffix: true
+
+branches:
+  - main
+  - name: rc/*
+    prerelease: '${name.replace(/^rc\//, "rc-")}'

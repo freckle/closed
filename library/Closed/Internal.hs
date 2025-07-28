@@ -33,6 +33,7 @@ import GHC.Generics
 import GHC.Stack
 import GHC.TypeLits
 import Test.QuickCheck
+import Text.ParserCombinators.ReadP (pfail, readP_to_S, readS_to_P)
 
 newtype Closed (a :: Nat) (b :: Nat) = Closed
   { getClosed :: Integer
@@ -134,6 +135,11 @@ instance (KnownNat a, KnownNat b, a <= b) => Enum (Closed a b) where
 
 instance Show (Closed a b) where
   showsPrec d (Closed x) = showParen (d > 9) $ showString "unsafeClosed " . showsPrec 10 x
+
+instance (KnownNat a, KnownNat b, a <= b) => Read (Closed a b) where
+  readsPrec n = readP_to_S $ do
+    i <- readS_to_P $ readsPrec @Integer n
+    maybe pfail pure $ closed @a @b i
 
 -- | Bounded arithmetic, e.g. maxBound + 1 == maxBound
 instance (KnownNat a, KnownNat b, a <= b) => Num (Closed a b) where

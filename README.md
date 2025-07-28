@@ -49,6 +49,7 @@ import GHC.TypeLits
 import qualified Data.Csv as CSV
 import Test.Hspec
 import Test.Hspec.QuickCheck
+import Text.Read (readEither)
 
 main :: IO ()
 main = hspec $ do
@@ -167,6 +168,16 @@ Arithmetic gets stuck at the upper and lower bounds instead of wrapping. This is
 Parsing of closed values is strict.
 
 ```haskell
+  describe "Read" $ do
+
+    it "should successfully read values in the specified bounds" $ do
+      let result = readEither "1" :: Either String (Bounds (Inclusive 1) (Exclusive 10))
+      result `shouldBe` Right 1
+
+    it "should fail to read values outside the specified bounds" $ do
+      let result = readEither "0" :: Either String (Bounds (Inclusive 1) (Exclusive 10))
+      result `shouldBe` Left "Prelude.read: no parse"
+
   describe "json" $ do
 
     it "should successfully parse values in the specified bounds" $ do

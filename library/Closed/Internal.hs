@@ -32,6 +32,7 @@ import Database.Persist.Sql
 import GHC.Generics
 import GHC.Stack
 import GHC.TypeLits
+import System.Random (Random (..))
 import Test.QuickCheck
 import Text.ParserCombinators.ReadP (pfail, readP_to_S, readS_to_P)
 
@@ -163,6 +164,12 @@ instance (KnownNat a, KnownNat b, a <= b) => Integral (Closed a b) where
   toInteger (Closed x) = x
 
 instance NFData (Closed a b)
+
+instance (KnownNat a, KnownNat b, a <= b) => Random (Closed a b) where
+  randomR (a, b) g =
+    let (x, g') = randomR (getClosed a, getClosed b) g
+    in  (unsafeClosed x, g')
+  random = randomR (minBound, maxBound)
 
 instance Hashable (Closed a b)
 

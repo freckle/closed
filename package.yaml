@@ -21,6 +21,7 @@ library:
   dependencies:
     - deepseq
     - hashable
+    - random
     - QuickCheck
 
 tests:

@@ -1,0 +1,27 @@
+indentation: 2
+column-limit: 80 # needs fourmolu >= v0.12
+function-arrows: leading
+comma-style: leading # default
+import-export-style: leading
+import-grouping: # needs fourmolu >= v0.17
+  - name: "Preludes"
+    rules:
+      - glob: Prelude
+  - name: "Everything else"
+    rules:
+      - match: all
+        priority: 100
+indent-wheres: false # default
+record-brace-space: true
+newlines-between-decls: 1 # default
+haddock-style: single-line
+let-style: mixed
+in-style: left-align
+single-constraint-parens: never # needs fourmolu >= v0.12
+sort-constraints: true # needs fourmolu >= v0.17
+sort-derived-classes: true # needs fourmolu >= v0.17
+sort-derived-clauses: true # needs fourmolu >= v0.17
+trailing-section-operators: false # needs fourmolu >= v0.17
+unicode: never # default
+respectful: true # default
+fixities: null # default

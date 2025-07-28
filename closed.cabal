@@ -1,11 +1,11 @@
 cabal-version: 1.12
 
--- This file has been generated from package.yaml by hpack version 0.34.4.
+-- This file has been generated from package.yaml by hpack version 0.38.0.
 --
 -- see: https://github.com/sol/hpack
 
 name:           closed
-version:        0.2.0.2
+version:        0.0.0.0
 synopsis:       Integers bounded by a closed interval
 description:    Integers bounded by a closed interval checked at compile time
 category:       Data

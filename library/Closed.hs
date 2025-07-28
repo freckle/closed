@@ -1,5 +1,5 @@
 module Closed
-  ( Endpoint(..)
+  ( Endpoint (..)
   , Closed
   , Bounds
   , Single

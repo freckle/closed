@@ -34,8 +34,9 @@ import GHC.Stack
 import GHC.TypeLits
 import Test.QuickCheck
 
-newtype Closed (n :: Nat) (m :: Nat)
-  = Closed {getClosed :: Integer}
+newtype Closed (n :: Nat) (m :: Nat) = Closed
+  { getClosed :: Integer
+  }
   deriving (Generic)
 
 -- | Describe whether the endpoint of a 'Bounds' includes

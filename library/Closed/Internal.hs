@@ -34,7 +34,7 @@ import GHC.Stack
 import GHC.TypeLits
 import Test.QuickCheck
 
-newtype Closed (n :: Nat) (m :: Nat) = Closed
+newtype Closed (a :: Nat) (b :: Nat) = Closed
   { getClosed :: Integer
   }
   deriving (Generic)
@@ -50,10 +50,10 @@ data Endpoint
 -- | Syntactic sugar to express open and half-open intervals using
 -- the 'Closed' type
 type family Bounds (lhs :: Endpoint) (rhs :: Endpoint) :: Type where
-  Bounds (Inclusive n) (Inclusive m) = Closed n m
-  Bounds (Inclusive n) (Exclusive m) = Closed n (m - 1)
-  Bounds (Exclusive n) (Inclusive m) = Closed (n + 1) m
-  Bounds (Exclusive n) (Exclusive m) = Closed (n + 1) (m - 1)
+  Bounds (Inclusive a) (Inclusive b) = Closed a b
+  Bounds (Inclusive a) (Exclusive b) = Closed a (b - 1)
+  Bounds (Exclusive a) (Inclusive b) = Closed (a + 1) b
+  Bounds (Exclusive a) (Exclusive b) = Closed (a + 1) (b - 1)
 
 -- | Syntactic sugar to express a value that has only one non-bottom
 -- inhabitant using the 'Closed' type
@@ -63,19 +63,19 @@ type Single (n :: Nat) = Bounds ('Inclusive n) ('Inclusive n)
 type FiniteNat (rhs :: Endpoint) = Bounds ('Inclusive 0) rhs
 
 -- | Proxy for the lower bound of a 'Closed' value
-lowerBound :: Closed n m -> Proxy n
+lowerBound :: Closed a b -> Proxy a
 lowerBound _ = Proxy
 
 -- | Proxy for the upper bound of a 'Closed' value
-upperBound :: Closed n m -> Proxy m
+upperBound :: Closed a b -> Proxy b
 upperBound _ = Proxy
 
 -- | Safely create a 'Closed' value using the specified argument
 closed
-  :: forall n m
-   . (KnownNat m, KnownNat n, n <= m)
+  :: forall a b
+   . (KnownNat a, KnownNat b, a <= b)
   => Integer
-  -> Maybe (Closed n m)
+  -> Maybe (Closed a b)
 closed x = result
  where
   extracted = fromJust result
@@ -85,10 +85,10 @@ closed x = result
 
 -- | Create a 'Closed' value throwing an error if the argument is not in range
 unsafeClosed
-  :: forall n m
-   . (HasCallStack, KnownNat m, KnownNat n, n <= m)
+  :: forall a b
+   . (HasCallStack, KnownNat a, KnownNat b, a <= b)
   => Integer
-  -> Closed n m
+  -> Closed a b
 unsafeClosed x = result
  where
   result =
@@ -98,25 +98,25 @@ unsafeClosed x = result
 
 -- | Clamp an @'Integral'@ in the range constrained by a @'Closed'@ interval
 clamp
-  :: forall n m a
-   . (Integral a, KnownNat m, KnownNat n, n <= m)
-  => a
-  -> Closed n m
+  :: forall a b i
+   . (Integral i, KnownNat a, KnownNat b, a <= b)
+  => i
+  -> Closed a b
 clamp x
-  | fromIntegral x < getClosed (minBound @(Closed n m)) = minBound
-  | fromIntegral x > getClosed (maxBound @(Closed n m)) = maxBound
+  | fromIntegral x < getClosed (minBound @(Closed a b)) = minBound
+  | fromIntegral x > getClosed (maxBound @(Closed a b)) = maxBound
   | otherwise = Closed (fromIntegral x)
 
 -- | Test equality on 'Closed' values in the same range
-instance Eq (Closed n m) where
+instance Eq (Closed a b) where
   Closed x == Closed y = x == y
 
 -- | Compare 'Closed' values in the same range
-instance Ord (Closed n m) where
+instance Ord (Closed a b) where
   Closed x `compare` Closed y = x `compare` y
 
 -- | Generate the lowest and highest inhabitant of a given 'Closed' type
-instance (KnownNat m, KnownNat n, n <= m) => Bounded (Closed n m) where
+instance (KnownNat a, KnownNat b, a <= b) => Bounded (Closed a b) where
   maxBound = result
    where
     result = Closed (natVal (upperBound result))
@@ -126,20 +126,20 @@ instance (KnownNat m, KnownNat n, n <= m) => Bounded (Closed n m) where
     result = Closed (natVal (lowerBound result))
 
 -- | Enumerate values in the range of a given 'Closed' type
-instance (KnownNat m, KnownNat n, n <= m) => Enum (Closed n m) where
+instance (KnownNat a, KnownNat b, a <= b) => Enum (Closed a b) where
   fromEnum = fromEnum . getClosed
   toEnum = unsafeClosed . toEnum
   enumFrom x = enumFromTo x maxBound
   enumFromThen x y = enumFromThenTo x y (if x >= y then minBound else maxBound)
 
-instance Show (Closed n m) where
+instance Show (Closed a b) where
   showsPrec d (Closed x) = showParen (d > 9) $ showString "unsafeClosed " . showsPrec 10 x
 
 -- | Bounded arithmetic, e.g. maxBound + 1 == maxBound
-instance (KnownNat m, KnownNat n, n <= m) => Num (Closed n m) where
-  Closed x + Closed y = Closed $ min (x + y) (fromIntegral (maxBound :: Closed n m))
-  Closed x - Closed y = Closed $ max (x - y) (fromIntegral (minBound :: Closed n m))
-  Closed x * Closed y = Closed $ min (x * y) (fromIntegral (maxBound :: Closed n m))
+instance (KnownNat a, KnownNat b, a <= b) => Num (Closed a b) where
+  Closed x + Closed y = Closed $ min (x + y) (fromIntegral (maxBound :: Closed a b))
+  Closed x - Closed y = Closed $ max (x - y) (fromIntegral (minBound :: Closed a b))
+  Closed x * Closed y = Closed $ min (x * y) (fromIntegral (maxBound :: Closed a b))
   abs = id
   signum = const 1
   fromInteger x = result
@@ -149,57 +149,57 @@ instance (KnownNat m, KnownNat n, n <= m) => Num (Closed n m) where
         then Closed x
         else error $ unrepresentable x result "fromInteger"
 
-instance (KnownNat m, KnownNat n, n <= m) => Real (Closed n m) where
+instance (KnownNat a, KnownNat b, a <= b) => Real (Closed a b) where
   toRational (Closed x) = x % 1
 
-instance (KnownNat m, KnownNat n, n <= m) => Integral (Closed n m) where
+instance (KnownNat a, KnownNat b, a <= b) => Integral (Closed a b) where
   quotRem (Closed x) (Closed y) = (Closed $ x `quot` y, Closed $ x `rem` y)
   toInteger (Closed x) = x
 
-instance NFData (Closed n m)
+instance NFData (Closed a b)
 
-instance Hashable (Closed n m)
+instance Hashable (Closed a b)
 
-instance ToJSON (Closed n m) where
+instance ToJSON (Closed a b) where
   toEncoding = toEncoding . getClosed
   toJSON = toJSON . getClosed
 
-instance (KnownNat m, KnownNat n, n <= m) => FromJSON (Closed n m) where
+instance (KnownNat a, KnownNat b, a <= b) => FromJSON (Closed a b) where
   parseJSON v = do
     x <- parseJSON v
     case closed x of
       Just cx -> pure cx
       n -> fail $ unrepresentable x (fromJust n) "parseJSON"
 
-instance CSV.ToField (Closed n m) where
+instance CSV.ToField (Closed a b) where
   toField = CSV.toField . getClosed
 
-instance (KnownNat m, KnownNat n, n <= m) => CSV.FromField (Closed n m) where
+instance (KnownNat a, KnownNat b, a <= b) => CSV.FromField (Closed a b) where
   parseField s = do
     x <- CSV.parseField s
     case closed x of
       Just cx -> pure cx
       n -> fail $ unrepresentable x (fromJust n) "parseField"
 
-instance (KnownNat m, KnownNat n, n <= m) => Arbitrary (Closed n m) where
+instance (KnownNat a, KnownNat b, a <= b) => Arbitrary (Closed a b) where
   arbitrary =
-    Closed <$> choose (natVal @n Proxy, natVal @m Proxy)
+    Closed <$> choose (natVal @a Proxy, natVal @b Proxy)
 
-instance (KnownNat m, KnownNat n, n <= m) => PersistField (Closed n m) where
+instance (KnownNat a, KnownNat b, a <= b) => PersistField (Closed a b) where
   toPersistValue = toPersistValue . fromIntegral @Integer @Int . getClosed
   fromPersistValue value = do
     x <- fromIntegral @Int @Integer <$> fromPersistValue value
-    case closed @n @m x of
+    case closed @a @b x of
       Just cx -> pure cx
       n -> Left $ pack $ unrepresentable x (fromJust n) "fromPersistValue"
 
-instance (KnownNat m, KnownNat n, n <= m) => PersistFieldSql (Closed n m) where
+instance (KnownNat a, KnownNat b, a <= b) => PersistFieldSql (Closed a b) where
   sqlType _ = sqlType (Proxy @Int)
 
 unrepresentable
-  :: (KnownNat m, KnownNat n)
+  :: (KnownNat a, KnownNat b)
   => Integer
-  -> Closed n m
+  -> Closed a b
   -> String
   -> String
 unrepresentable x cx prefix =
@@ -213,26 +213,26 @@ unrepresentable x cx prefix =
 
 -- | Convert a type-level literal into a 'Closed' value
 natToClosed
-  :: forall n m x proxy
-   . (KnownNat m, KnownNat n, KnownNat x, n <= x, x <= m)
+  :: forall a b x proxy
+   . (KnownNat a, KnownNat b, KnownNat x, a <= x, x <= b)
   => proxy x
-  -> Closed n m
+  -> Closed a b
 natToClosed p = Closed $ natVal p
 
 -- | Add inhabitants at the end
-weakenUpper :: forall k n m. (m <= k, n <= m) => Closed n m -> Closed n k
+weakenUpper :: forall k a b. (a <= b, b <= k) => Closed a b -> Closed a k
 weakenUpper (Closed x) = Closed x
 
 -- | Add inhabitants at the beginning
-weakenLower :: forall k n m. (k <= n, n <= m) => Closed n m -> Closed k m
+weakenLower :: forall k a b. (a <= b, k <= a) => Closed a b -> Closed k b
 weakenLower (Closed x) = Closed x
 
 -- | Remove inhabitants from the end. Returns 'Nothing' if the input was removed
 strengthenUpper
-  :: forall k n m
-   . (KnownNat k, KnownNat m, KnownNat n, k <= m, n <= k, n <= m)
-  => Closed n m
-  -> Maybe (Closed n k)
+  :: forall k a b
+   . (KnownNat a, KnownNat b, KnownNat k, a <= b, a <= k, k <= b)
+  => Closed a b
+  -> Maybe (Closed a k)
 strengthenUpper (Closed x) = result
  where
   result = do
@@ -241,10 +241,10 @@ strengthenUpper (Closed x) = result
 
 -- | Remove inhabitants from the beginning. Returns 'Nothing' if the input was removed
 strengthenLower
-  :: forall k n m
-   . (KnownNat k, KnownNat m, KnownNat n, k <= m, n <= k, n <= m)
-  => Closed n m
-  -> Maybe (Closed k m)
+  :: forall k a b
+   . (KnownNat a, KnownNat b, KnownNat k, a <= b, a <= k, k <= b)
+  => Closed a b
+  -> Maybe (Closed k b)
 strengthenLower (Closed x) = result
  where
   result = do
@@ -252,23 +252,23 @@ strengthenLower (Closed x) = result
     pure $ Closed x
 
 -- | Test two different types of 'Closed' values for equality.
-equals :: Closed n m -> Closed o p -> Bool
+equals :: Closed a b -> Closed o p -> Bool
 equals (Closed x) (Closed y) = x == y
 
 infix 4 `equals`
 
 -- | Compare two different types of 'Closed' values
-cmp :: Closed n m -> Closed o p -> Ordering
+cmp :: Closed a b -> Closed o p -> Ordering
 cmp (Closed x) (Closed y) = x `compare` y
 
 -- | Add two different types of 'Closed' values
-add :: Closed n m -> Closed o p -> Closed (n + o) (m + p)
+add :: Closed a b -> Closed o p -> Closed (n + o) (m + p)
 add (Closed x) (Closed y) = Closed $ x + y
 
 -- | Subtract two different types of 'Closed' values
 -- Returns 'Left' for negative results, and 'Right' for positive results.
 sub
-  :: Closed n m
+  :: Closed a b
   -> Closed o p
   -> Either (Closed (o - n) (p - m)) (Closed (n - o) (m - p))
 sub (Closed x) (Closed y)
@@ -276,12 +276,12 @@ sub (Closed x) (Closed y)
   | otherwise = Left $ Closed $ y - x
 
 -- | Multiply two different types of 'Closed' values
-multiply :: Closed n m -> Closed o p -> Closed (n * o) (m * p)
+multiply :: Closed a b -> Closed o p -> Closed (a * o) (b * p)
 multiply (Closed x) (Closed y) = Closed $ x * y
 
 -- | Verifies that a given 'Closed' value is valid.
 -- Should always return 'True' unles you bring the @Closed.Internal.Closed@ constructor into scope,
 -- or use 'Unsafe.Coerce.unsafeCoerce' or other nasty hacks
-isValidClosed :: (KnownNat m, KnownNat n) => Closed n m -> Bool
+isValidClosed :: (KnownNat a, KnownNat b) => Closed a b -> Bool
 isValidClosed cx@(Closed x) =
   natVal (lowerBound cx) <= x && x <= natVal (upperBound cx)

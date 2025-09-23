@@ -31,8 +31,9 @@ tests:
     dependencies:
       - closed
       - hspec
-      - markdown-unlit
       - vector
+    build-tools:
+      - markdown-unlit
 
 extra-source-files:
   - README.lhs

@@ -26,11 +26,24 @@ jobs:
         stack-yaml: ${{ fromJSON(needs.generate.outputs.stack-yamls) }}
       fail-fast: false
 
+    # Not a merge gate
+    continue-on-error: ${{ matrix.stack-yaml == 'stack-lts13.yaml' }}
+
     steps:
       - uses: actions/checkout@v7
       - uses: freckle/stack-action@v5
         with:
           stack-yaml: ${{ matrix.stack-yaml }}
+
+  check:
+    if: always()
+    needs:
+      - test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: re-actors/alls-green@release/v1
+        with:
+          jobs: ${{ toJSON(needs) }}
 
   lint:
     runs-on: ubuntu-latest
